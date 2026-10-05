@@ -16,6 +16,7 @@ public class VesselDetailResponse
     public string? CallSign { get; set; }
     public string? RawDestination { get; set; }
     public VesselDestination? Destination { get; set; }
+    public Flag? Flag { get; set; }
     public float? Draught  { get; set; }
     public DateTimeOffset? Eta  { get; set; }
     public float? Dim_A { get; set; }

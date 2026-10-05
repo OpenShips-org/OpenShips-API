@@ -57,6 +57,18 @@ public static class DestinationParser
             };
         }
 
+        if (TryParseUnLocodeRoute(raw, out var from2, out var to2))
+        {
+            return new ShipDestination
+            {
+                Raw = raw,
+                RouteType = DestinationType.Directed,
+                From = from2,
+                To = to2
+            };
+        }
+
+
         // Directed route
         foreach (var separator in DirectedSeparators)
         {
@@ -106,5 +118,37 @@ public static class DestinationParser
             @"\s+",
             " "
         );
+    }
+    
+    private static bool TryParseUnLocodeRoute(
+        string value,
+        out string? from,
+        out string? to)
+    {
+        from = null;
+        to = null;
+
+        var parts = value.Split(
+            '-',
+            2,
+            StringSplitOptions.TrimEntries);
+
+        if (parts.Length != 2)
+            return false;
+
+        if (!IsUnLocode(parts[0]) || !IsUnLocode(parts[1]))
+            return false;
+
+        from = parts[0];
+        to = parts[1];
+
+        return true;
+    }
+    
+    private static bool IsUnLocode(string value)
+    {
+        return value.Length == 5 &&
+               value[..2].All(char.IsLetter) &&
+               value[2..].All(char.IsLetterOrDigit);
     }
 }

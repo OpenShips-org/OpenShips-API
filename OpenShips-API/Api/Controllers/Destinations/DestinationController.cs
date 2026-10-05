@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenShipsAPI.Api.Models;
@@ -9,6 +11,8 @@ namespace OpenShipsAPI.Api.Controllers.Destinations;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/destinations")]
+[ApiVersion(1.0)]
+[EnableCors("Public")]
 public class DestinationController(AppDbContext db, AisMapper mapper) : ControllerBase
 {
     [HttpGet("{mmsi}")]

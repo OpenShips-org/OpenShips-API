@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenShipsAPI.Api.Models;
@@ -13,6 +14,7 @@ namespace OpenShipsAPI.Api.Controllers.Vessels;
 [ApiController]
 [Route("api/v{version:apiVersion}/vessels/position")]
 [ApiVersion(1.0)]
+[EnableCors("Public")]
 public class VesselPositionController(AppDbContext db, AisMapper mapper, ILogger<VesselPositionController> logger)
     : ControllerBase
 {

@@ -1,3 +1,4 @@
+using OpenShipsAPI.Api.Models;
 using OpenShipsAPI.Api.Models.Ports;
 using OpenShipsAPI.Api.Models.Vessel;
 using OpenShipsAPI.Domain.Destination;
@@ -16,7 +17,8 @@ public partial class AisMapper
 
     public partial VesselDetailResponse ToResponse(
         StaticShipDataAis source,
-        ShipDestination? destination);
+        ShipDestination? destination,
+        Flag? flag);
 
     [MapProperty(nameof(ShipDestination.RouteType), nameof(VesselDestination.DestinationType))]
     [MapProperty(nameof(ShipDestination.To), nameof(VesselDestination.ToName))]

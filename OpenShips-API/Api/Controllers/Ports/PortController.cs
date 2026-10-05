@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenShipsAPI.Api.Models;
@@ -12,6 +13,7 @@ namespace OpenShipsAPI.Api.Controllers.Ports;
 [ApiController]
 [Route("api/v{version:apiVersion}/ports")]
 [ApiVersion(1.0)]
+[EnableCors("Public")]
 public class PortController(
     AppDbContext db,
     AisMapper mapper) : ControllerBase

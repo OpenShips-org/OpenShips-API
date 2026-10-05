@@ -37,9 +37,18 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
+    options.AddPolicy("Public", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    options.AddPolicy("Private", policy =>
+    {
+        policy
+            .WithOrigins("https://my-website.example")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -109,6 +118,11 @@ if (!noAis)
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // -----------------------------------------------------------------------------
 // Development
@@ -126,10 +140,6 @@ if (app.Environment.IsDevelopment())
     });
     
     app.UseCors("Development");
-}
-else
-{
-    app.UseCors("Frontend");
 }
 
 // -----------------------------------------------------------------------------
@@ -180,6 +190,8 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseCors();
 
 app.UseAuthorization();
 

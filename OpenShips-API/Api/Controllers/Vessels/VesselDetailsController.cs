@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenShipsAPI.Api.Models;
@@ -11,6 +12,7 @@ namespace OpenShipsAPI.Api.Controllers.Vessels;
 [ApiController]
 [Route("api/v{version:apiVersion}/vessels/details")]
 [ApiVersion(1.0)]
+[EnableCors("Public")]
 public class VesselDetailsController(AppDbContext db, AisMapper mapper) : ControllerBase
 {
     [HttpGet("{mmsi}")]
@@ -28,11 +30,13 @@ public class VesselDetailsController(AppDbContext db, AisMapper mapper) : Contro
             .OrderByDescending(x => x.LastSeen)
             .FirstOrDefaultAsync();
         
+        var flag = FlagResolver.GetFlag(data.Mmsi);
+        
         return new ApiResponse<VesselDetailResponse>
         {
             Version = 1,
             Success = true,
-            Data = mapper.ToResponse(data, destination)
+            Data = mapper.ToResponse(data, destination, flag)
         };
     }
 }
