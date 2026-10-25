@@ -87,10 +87,11 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
 
             entity.HasIndex(x => new
-            {
-                x.Mmsi,
-                x.EventTimestamp
-            });
+                {
+                    x.Mmsi,
+                    x.EventTimestamp
+                })
+                .IsDescending(false, true);
         });
 
         // ---------------------------------------------------------------------

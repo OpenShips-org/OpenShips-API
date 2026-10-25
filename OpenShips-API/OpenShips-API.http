@@ -25,6 +25,11 @@ Accept: application/json
 
 ###
 
+GET {{OpenShips_API_HostAddress}}/api/v{{ApiVersion}}/vessels/position/track/{{MMSI}}/timeframe
+Accept: application/json
+
+###
+
 GET {{OpenShips_API_HostAddress}}/api/v{{ApiVersion}}/ports/{{UnLocode}}
 Accept: application/json
 

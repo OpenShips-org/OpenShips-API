@@ -9,7 +9,7 @@ public sealed class AisEventQueue
         Channel.CreateBounded<AisEvent>(
             new BoundedChannelOptions(10_000)
             {
-                FullMode = BoundedChannelFullMode.DropWrite,
+                FullMode = BoundedChannelFullMode.DropOldest,
                 SingleReader = true,
                 SingleWriter = false
             });
@@ -18,6 +18,11 @@ public sealed class AisEventQueue
     {
         return _channel.Writer.TryWrite(aisEvent);
     }
+    
+    public int Count =>
+        _channel.Reader.CanCount
+            ? _channel.Reader.Count
+            : -1;
 
     public ChannelReader<AisEvent> Reader => _channel.Reader;
 }

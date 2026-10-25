@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using OpenShipsAPI.Domain.Events;
 using OpenShipsAPI.Infrastructure.Database;
 using OpenShipsAPI.Infrastructure.Database.Models;
 using OpenShipsAPI.Infrastructure.Queues;
-using OpenShipsAPI.Infrastructure.Streams.Common;
 
 namespace OpenShipsAPI.Worker;
 
@@ -38,7 +38,26 @@ public sealed class AisEventWorker : BackgroundService
 
             if (batch.Count > 0)
             {
-                await ProcessBatchAsync(batch, stoppingToken);
+                var stopwatch = Stopwatch.StartNew();
+                
+                try
+                {
+                    await ProcessBatchAsync(batch, stoppingToken);
+                }
+                finally
+                {
+                    stopwatch.Stop();
+
+                    _logger.LogInformation(
+                        "AIS batch processed: Count={Count}, DurationMs={DurationMs}",
+                        batch.Count,
+                        stopwatch.ElapsedMilliseconds);
+                    
+                    _logger.LogInformation(
+                        "AIS queue status: Queued={Queued}, BatchSize={BatchSize}",
+                        _queue.Count,
+                        batch.Count);
+                }
             }
         }
     }
@@ -179,15 +198,22 @@ public sealed class AisEventWorker : BackgroundService
                 x => x.Mmsi,
                 cancellationToken);
         
-        var lastHistoryPositions = await db.HistoricalAisPositions
-            .Where(x => mmsis.Contains(x.Mmsi))
-            .GroupBy(x => x.Mmsi)
-            .Select(g => g
-                .OrderByDescending(x => x.EventTimestamp)
-                .First())
-            .ToDictionaryAsync(
-                x => x.Mmsi,
-                cancellationToken);
+        // var stopwatch = Stopwatch.StartNew();
+
+        var lastHistoryPositions = await GetLastHistoryPositionsAsync(
+            db,
+            mmsis,
+            cancellationToken);
+
+        /*
+        stopwatch.Stop();
+
+        _logger.LogInformation(
+            "Loading latest AIS history: MmsiCount={MmsiCount}, RowsReturned={RowsReturned}, DurationMs={DurationMs}",
+            mmsis.Length,
+            lastHistoryPositions.Count,
+            stopwatch.ElapsedMilliseconds);
+        */
 
         var history = new List<HistoricalAisPosition>();
 
@@ -443,5 +469,40 @@ public sealed class AisEventWorker : BackgroundService
             Length = data.Length,
             Beam = data.Beam,
         };
+    }
+    
+    private async Task<Dictionary<int, HistoricalAisPosition>>
+        GetLastHistoryPositionsAsync(
+            AppDbContext db,
+            int[] mmsis,
+            CancellationToken cancellationToken)
+    {
+        if (mmsis.Length == 0)
+        {
+            return new Dictionary<int, HistoricalAisPosition>();
+        }
+
+        var mmsiParameter = new Npgsql.NpgsqlParameter<int[]>(
+            "mmsis",
+            mmsis);
+
+        var positions = await db.HistoricalAisPositions
+            .FromSqlRaw(
+                """
+                SELECT latest.*
+                FROM unnest(@mmsis) AS ships("Mmsi")
+                CROSS JOIN LATERAL (
+                    SELECT h.*
+                    FROM public."HistoricalAisPositions" AS h
+                    WHERE h."Mmsi" = ships."Mmsi"
+                    ORDER BY h."EventTimestamp" DESC
+                    LIMIT 1
+                ) AS latest
+                """,
+                mmsiParameter)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return positions.ToDictionary(x => x.Mmsi);
     }
 }

@@ -224,7 +224,8 @@ namespace OpenShipsAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Mmsi", "EventTimestamp");
+                    b.HasIndex("Mmsi", "EventTimestamp")
+                        .IsDescending(false, true);
 
                     b.ToTable("HistoricalAisPositions");
                 });

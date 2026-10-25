@@ -217,4 +217,40 @@ public class VesselPositionController(AppDbContext db, AisMapper mapper, ILogger
             }
         };
     }
+
+    [HttpGet("track/{mmsi}/timeframe")]
+    public async Task<ActionResult<ApiResponse<VesselTrackTimeframeResponse>>> GetTrackTimeframe([FromRoute] int mmsi)
+    {
+        if (mmsi <= 0)
+            return BadRequest("Invalid MMSI.");
+
+        var minMax = await db.HistoricalAisPositions
+            .AsNoTracking()
+            .Where(x => x.Mmsi == mmsi)
+            .GroupBy(x => x.Mmsi)
+            .Select(g => new
+            {
+                Min = g.Min(x => x.EventTimestamp),
+                Max = g.Max(x => x.EventTimestamp)
+            })
+            .FirstOrDefaultAsync();
+
+        if (minMax == null)
+        {
+            return NotFound();
+        }
+
+        return new ApiResponse<VesselTrackTimeframeResponse>
+        {
+            Version = 1,
+            Success = true,
+            Data = new VesselTrackTimeframeResponse
+            {
+                Mmsi = mmsi,
+                FirstPositionTimestamp = minMax.Min,
+                LastestPositionTimestamp = minMax.Max
+            }
+        };
+    }
+    
 }
