@@ -66,7 +66,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
 {
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Default"));
+        builder.Configuration.GetConnectionString("Default"),
+        npgsqlOptions =>
+        {
+            npgsqlOptions.CommandTimeout(600);
+        });
 });
 
 
